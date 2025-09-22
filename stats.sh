@@ -75,11 +75,16 @@ while :; do
 sensors_out=$(sensors)
 
 # Get memory usage and create load bar
-read total used free <<< $(LC_ALL=C free -m | awk '/^Mem/ {print $2, $3, $4}')
-total=${total:-0}; used=${used:-0}; free=${free:-0}
+read total used free available <<< $(LC_ALL=C free -m | awk '/^Mem/ {print $2, $3, $4, $7}')
+
+total=${total:-0}; used=${used:-0}; free=${free:-0}; available=${available:-0}
+
+# Convert to GB
 total_gb=$(awk -v t="$total" 'BEGIN{printf "%.1f", t/1024}')
 used_gb=$(awk -v u="$used"  'BEGIN{printf "%.1f", u/1024}')
 free_gb=$(awk -v f="$free"  'BEGIN{printf "%.1f", f/1024}')
+avail_gb=$(awk -v a="$available" 'BEGIN{printf "%.1f", a/1024}')
+
 perc=$(( total>0 ? used*100/total : 0 ))
 blocks=$(( perc*20/100 ))
 bar=$(printf "%-${blocks}s" "#" | tr ' ' '#')
@@ -129,9 +134,10 @@ echo -e "${YELLOW}RAM Memory${NC}"
 echo " > Total:        $total_gb GB"
 echo " > Used:         $used_gb GB"
 echo " > Free:         $free_gb GB"
+echo " > Available:    $avail_gb GB"
 echo -e " > Load:         [${GREEN}${bar}${NC}] $perc%"
 
-echo -e "\n${CYAN}Press [Ctrl+C] to exit...${NC}"
+echo -e "${CYAN}Press [Ctrl+C] to exit...${NC}"
 
 sleep "$TIME"
 
@@ -163,4 +169,3 @@ case $2 in
     all) show_all; exit;;
     *)   show_details; exit;;
 esac
-
