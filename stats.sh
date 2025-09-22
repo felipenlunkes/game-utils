@@ -4,7 +4,8 @@
 #
 # Optimized for ASUS motherboards, but may work for other manufacturers if specific modules are loaded.
 # For ASUS, the nct6798 module must be loaded.
-# Compatible with AMD Radeon RX, NVIDIA GTX/RTX and Intel Arc graphics cards (although more information is available for AMD Radeon RX).
+# Compatible with AMD Radeon RX, NVIDIA GTX/RTX and Intel Arc graphics cards (although more information is available for
+# AMD Radeon RX - model of my GPU used for testing).
 #
 # Copyright (C) 2025 Felipe Miguel Nery Lunkes
 # All rights reserved.
