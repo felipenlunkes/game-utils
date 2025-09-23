@@ -28,7 +28,7 @@ idled=$((idle2 - prev_idle))
 
 cpu_perc=$(( (1000 * (totald - idled) / totald + 5) / 10 ))
 
-# Barra de 20 blocos
+# 20 characters load bar
 blocks=$(( cpu_perc * 20 / 100 ))
 [ "$blocks" -lt 0 ] && blocks=0
 [ "$blocks" -gt 20 ] && blocks=20
@@ -44,7 +44,7 @@ echo "$cpu_perc|$bar"
 # Get CPU temperature
 function get_cpu_temp() {
 
-    awk -F':' '/Tctl|Core 0/ {print $2}' <<< "$sensors_out" | awk '{print $1}' | head -n1
+awk -F':' '/Tctl|Core 0/ {print $2}' <<< "$sensors_out" | awk '{print $1}' | head -n1
 }
 
 # Get GPU temperature
@@ -77,7 +77,10 @@ sensors_out=$(sensors)
 # Get memory usage and create load bar
 read total used free available <<< $(LC_ALL=C free -m | awk '/^Mem/ {print $2, $3, $4, $7}')
 
-total=${total:-0}; used=${used:-0}; free=${free:-0}; available=${available:-0}
+total=${total:-0};
+used=${used:-0};
+free=${free:-0};
+available=${available:-0}
 
 # Convert to GB
 total_gb=$(awk -v t="$total" 'BEGIN{printf "%.1f", t/1024}')
@@ -156,6 +159,7 @@ sleep "$TIME"
 done
 }
 
+# Global definitions
 RED="\033[1;31m";
 GREEN="\033[1;32m";
 CYAN="\033[1;36m";
@@ -166,6 +170,6 @@ NC="\033[0m"
 TIME=${1:-5}
 
 case $2 in
-    all) show_all; exit;;
-    *)   show_details; exit;;
+all) show_all; exit;;
+*)   show_details; exit;;
 esac
