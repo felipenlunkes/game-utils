@@ -93,10 +93,6 @@ blocks=$(( perc*20/100 ))
 bar=$(printf "%-${blocks}s" "#" | tr ' ' '#')
 bar=$(printf "%-20s" "$bar")
 
-# Get fan information
-gpu_fan1=$(awk '$1=="amdgpu-pci-0300"{chip="gpu"} chip=="gpu" && $1=="fan1:"{print $2; exit}' <<<"$sensors_out")
-mobo_fan1=$(awk '$1=="nct6798-isa-0290"{chip="mobo"} chip=="mobo" && $1=="fan1:"{print $2; exit}' <<<"$sensors_out")
-
 # Get CPU usage
 cpu_data=$(get_cpu_usage)
 cpu_perc="${cpu_data%%|*}"
@@ -112,9 +108,9 @@ echo -e " > Load:         [$cpu_bar] $cpu_perc%"
 echo -e "${YELLOW}GPU${NC} - $GPU_NAME"
 if [[ "$GPU_NAME" == Radeon* ]]; then
     # For AMD Radeon RX
-    hot=$(awk -F':' '/junction/ {print $2}' <<<"$sensors_out" | awk '{print $1}')
-    edge=$(awk -F':' '/edge/     {print $2}' <<<"$sensors_out" | awk '{print $1}')
-    mem=$(awk -F':' '/mem/      {print $2}' <<<"$sensors_out" | awk '{print $1}')
+    hot=$(awk -F':' '/^junction:/ {print $2}' <<<"$sensors_out" | awk '{print $1}' | head -n1)
+    edge=$(awk -F':' '/^edge:/ {print $2}' <<<"$sensors_out" | awk '{print $1}' | head -n1)
+    mem=$(awk -F':' '/^mem:/ {print $2}' <<<"$sensors_out" | awk '{print $1}' | head -n1)
     gpu_fan1=$(awk '$1=="amdgpu-pci-0300"{chip="gpu"} chip=="gpu" && $1=="fan1:"{print $2; exit}' <<<"$sensors_out")
     echo " > Hotspot (°C): $hot"
     echo " > Edge (°C):    $edge"
@@ -126,12 +122,23 @@ else
 fi
 
 echo -e "${YELLOW}SSD${NC}"
-echo " > NVME (°C):    $(awk -F':' '/Composite/ {print $2}' <<<"$sensors_out" | awk '{print $1}')"
+# Show all NVME devices
+nvme_count=0
+while IFS= read -r line; do
+    if [[ -n "$line" ]]; then
+        ((nvme_count++))
+        echo " > NVME $nvme_count (°C): $line"
+    fi
+done < <(awk -F':' '/Composite:/ {
+    gsub(/^[ \t]+/, "", $2);
+    val = $2;
+    gsub(/[ \t].*/, "", val);
+    print val
+}' <<<"$sensors_out")
 
-echo -e "${YELLOW}Fans (RPM)${NC}"
-echo " > CPU:          $(awk -F':' '/fan2/ {print $2}' <<<"$sensors_out" | awk '{print $1}')"
-echo " > Chassis 1:    $(awk -F':' '/fan3/ {print $2}' <<<"$sensors_out" | awk '{print $1}')"
-echo " > Chassis 2:    $mobo_fan1"
+if [ "$nvme_count" -eq 0 ]; then
+    echo " > No NVME devices detected"
+fi
 
 echo -e "${YELLOW}RAM Memory${NC}"
 echo " > Total:        $total_gb GB"
@@ -173,3 +180,4 @@ case $2 in
 all) show_all; exit;;
 *)   show_details; exit;;
 esac
+
